@@ -46,23 +46,23 @@ pip install xadmin2
 or Install from github source:
 
 ```{.sourceCode .bash}
-pip install git+git://github.com/beeguess/xadmin.git
+pip install git+git://github.com/wgbbiao/xadmin.git
 ```
 
 ## Install Requires
 
 - [django](http://djangoproject.com) \>=2
-- [django-crispy-forms](http://django-crispy-forms.rtfd.org) \>=1.6.0
+- [django-crispy-forms](http://django-crispy-forms.rtfd.org) \>=1.8.1
   (For xadmin crispy forms)
-- [django-reversion](https://github.com/etianen/django-reversion)
+- [django-reversion](https://github.com/etianen/django-reversion)>=3.0.4
   ([OPTION] For object history and reversion feature, please select
   right version by your django, see
   [changelog](https://github.com/etianen/django-reversion/blob/master/CHANGELOG.rst)
   )
-- [django-formtools](https://github.com/django/django-formtools)
+- [django-formtools](https://github.com/django/django-formtools)>=2.1
   ([OPTION] For wizward form)
-- [xlwt](http://www.python-excel.org/) ([OPTION] For export xls files)
-- [xlsxwriter](https://github.com/jmcnamara/XlsxWriter) ([OPTION] For
+- [xlwt](http://www.python-excel.org/)>=1.3.0 ([OPTION] For export xls files)
+- [xlsxwriter](https://github.com/jmcnamara/XlsxWriter) >=1.2.6([OPTION] For
   export xlsx files)
 
 ## Documentation

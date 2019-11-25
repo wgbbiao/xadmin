@@ -21,13 +21,13 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        'setuptools', 'django>=2', 'django-crispy-forms>=1.6.0',
-        'django-reversion>=2.0.0', 'django-formtools>=1.0',
-        'django-import-export>=0.5.1', 'httplib2==0.9.2', 'future', 'six'
+        'setuptools', 'django>=2', 'django-crispy-forms>=1.8.1',
+        'django-reversion>=3.0.4', 'django-formtools>=2.1',
+        'django-import-export>=1.2.1.dev0', 'httplib2==0.9.2', 'future'
     ],
     extras_require={
         'Excel': ['xlwt', 'xlsxwriter'],
-        'Reversion': ['django-reversion>=2.0.0'],
+        'Reversion': ['django-reversion>=3.0.4'],
     },
     zip_safe=False,
     keywords=['admin', 'django', 'xadmin', 'bootstrap'],
@@ -40,7 +40,6 @@ setup(
         'Operating System :: OS Independent',
         "Programming Language :: JavaScript",
         'Programming Language :: Python',
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.4",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
