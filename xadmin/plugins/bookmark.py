@@ -7,8 +7,8 @@ from django.forms import ModelChoiceField
 from django.http import QueryDict
 from django.template import loader
 from django.utils.decorators import method_decorator
-from django.utils.encoding import smart_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.encoding import smart_str
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_protect
 
 from xadmin.filters import FILTER_PREFIX, SEARCH_VAR
@@ -202,7 +202,7 @@ class BookmarkWidget(PartialBaseWidget):
         self.bookmark = bookmark
 
         if not self.title:
-            self.title = smart_text(bookmark)
+            self.title = smart_str(bookmark)
 
         req = self.make_get_request("", data.items())
         self.list_view = self.get_view_class(
@@ -230,6 +230,7 @@ class BookmarkWidget(PartialBaseWidget):
         ]
         context['result_count'] = list_view.result_count
         context['page_url'] = self.bookmark.url
+
 
 site.register(Bookmark, BookmarkAdmin)
 site.register_plugin(BookmarkPlugin, ListAdminView)

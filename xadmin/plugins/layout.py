@@ -1,6 +1,6 @@
 # coding=utf-8
 from django.template import loader
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext as _
 
 from xadmin.plugins.utils import get_context_dict
 from xadmin.sites import site
@@ -40,14 +40,17 @@ class GridLayoutPlugin(BaseAdminPlugin):
     def init_request(self, *args, **kwargs):
         active = bool(self.request.method == 'GET' and self.grid_layouts)
         if active:
-            layouts = (type(self.grid_layouts) in (list, tuple)) and self.grid_layouts or (self.grid_layouts,)
+            layouts = (type(self.grid_layouts) in (list, tuple)
+                       ) and self.grid_layouts or (self.grid_layouts,)
             self._active_layouts = [self.get_layout(l) for l in layouts]
-            self._current_layout = self.request.GET.get(LAYOUT_VAR, self._active_layouts[0]['key'])
+            self._current_layout = self.request.GET.get(
+                LAYOUT_VAR, self._active_layouts[0]['key'])
             for layout in self._active_layouts:
                 if self._current_layout == layout['key']:
                     self._current_icon = layout['icon']
                     layout['selected'] = True
-                    self.admin_view.object_list_template = self.admin_view.get_template_list(layout['template'])
+                    self.admin_view.object_list_template = self.admin_view.get_template_list(
+                        layout['template'])
         return active
 
     def result_item(self, item, obj, field_name, row):

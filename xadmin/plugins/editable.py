@@ -4,10 +4,10 @@ from django.db import models, transaction
 from django.forms.models import modelform_factory
 from django.forms import Media
 from django.http import Http404, HttpResponse
-from django.utils.encoding import force_text, smart_text
+from django.utils.encoding import force_str, smart_str
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from xadmin.plugins.ajax import JsonErrorDict
 from xadmin.sites import site
 from xadmin.util import lookup_field, display_for_field, label_for_field, unquote, boolean_icon
@@ -27,9 +27,11 @@ class EditablePlugin(BaseAdminPlugin):
         self.editable_need_fields = {}
 
     def init_request(self, *args, **kwargs):
-        active = bool(self.request.method == 'GET' and self.admin_view.has_change_permission() and self.list_editable)
+        active = bool(self.request.method == 'GET' and self.admin_view.has_change_permission(
+        ) and self.list_editable)
         if active:
-            self.model_form = self.get_model_view(ModelFormAdminUtil, self.model).form_obj
+            self.model_form = self.get_model_view(
+                ModelFormAdminUtil, self.model).form_obj
         return active
 
     def result_item(self, item, obj, field_name, row):
@@ -77,7 +79,7 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
 
         if self.org_obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') %
-                          {'name': force_text(self.opts.verbose_name), 'key': escape(object_id)})
+                          {'name': force_str(self.opts.verbose_name), 'key': escape(object_id)})
 
     def get_new_field_html(self, f):
         result = self.result_item(self.org_obj, f, {'is_display_first':
@@ -98,7 +100,7 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
                     allow_tags = True
                     text = boolean_icon(value)
                 else:
-                    text = smart_text(value)
+                    text = smart_str(value)
             else:
                 if isinstance(f.rel, models.ManyToOneRel):
                     field_val = getattr(self.org_obj, f.name)
@@ -113,7 +115,8 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
     @filter_hook
     def get(self, request, object_id):
         model_fields = [f.name for f in self.opts.fields]
-        fields = [f for f in request.GET['fields'].split(',') if f in model_fields]
+        fields = [f for f in request.GET['fields'].split(
+            ',') if f in model_fields]
         defaults = {
             "form": self.form,
             "fields": fields,
@@ -130,7 +133,8 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
         s = '{% load i18n crispy_forms_tags %}<form method="post" action="{{action_url}}">{% crispy form %}' + \
             '<button type="submit" class="btn btn-success btn-block btn-sm">{% trans "Apply" %}</button></form>'
         t = template.Template(s)
-        c = template.Context({'form': form, 'action_url': self.model_admin_url('patch', self.org_obj.pk)})
+        c = template.Context(
+            {'form': form, 'action_url': self.model_admin_url('patch', self.org_obj.pk)})
 
         return HttpResponse(t.render(c))
 

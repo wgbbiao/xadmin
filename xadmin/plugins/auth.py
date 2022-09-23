@@ -9,8 +9,8 @@ from django.template.response import TemplateResponse
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect
 from django.utils.html import escape
-from django.utils.encoding import smart_text
-from django.utils.translation import ugettext as _
+from django.utils.encoding import smart_str
+from django.utils.translation import gettext as _
 from django.views.decorators.debug import sensitive_post_parameters
 from django.forms import ModelMultipleChoiceField
 from django.contrib.auth import get_user_model
@@ -118,6 +118,7 @@ class PermissionAdmin(object):
     model_icon = 'fa fa-lock'
     list_display = ('show_name', )
 
+
 site.register(Group, GroupAdmin)
 site.register(User, UserAdmin)
 site.register(Permission, PermissionAdmin)
@@ -134,11 +135,12 @@ class UserFieldPlugin(BaseAdminPlugin):
 
     def get_form_datas(self, datas):
         if self.user_fields and 'data' in datas:
-            if hasattr(datas['data'],'_mutable') and not datas['data']._mutable:
+            if hasattr(datas['data'], '_mutable') and not datas['data']._mutable:
                 datas['data'] = datas['data'].copy()
             for f in self.user_fields:
                 datas['data'][f] = self.user.id
         return datas
+
 
 site.register_plugin(UserFieldPlugin, ModelFormAdminView)
 
@@ -162,6 +164,7 @@ class ModelPermissionPlugin(BaseAdminPlugin):
             list_display.remove(self.user_owned_objects_field)
         return list_display
 
+
 site.register_plugin(ModelPermissionPlugin, ModelAdminView)
 
 
@@ -169,6 +172,7 @@ class AccountMenuPlugin(BaseAdminPlugin):
 
     def block_top_account_menu(self, context, nodes):
         return '<li><a href="%s"><i class="fa fa-key"></i> %s</a></li>' % (self.get_admin_url('account_password'), _('Change Password'))
+
 
 site.register_plugin(AccountMenuPlugin, CommAdminView)
 
@@ -189,7 +193,8 @@ class ChangePasswordView(ModelAdminView):
 
     def get_media(self):
         media = super(ChangePasswordView, self).get_media()
-        media = media + self.vendor('xadmin.form.css', 'xadmin.page.form.js') + self.form.media
+        media = media + self.vendor('xadmin.form.css',
+                                    'xadmin.page.form.js') + self.form.media
         return media
 
     def get_context(self):
@@ -199,7 +204,7 @@ class ChangePasswordView(ModelAdminView):
         helper.include_media = False
         self.form.helper = helper
         context.update({
-            'title': _('Change password: %s') % escape(smart_text(self.obj)),
+            'title': _('Change password: %s') % escape(smart_str(self.obj)),
             'form': self.form,
             'has_delete_permission': False,
             'has_change_permission': True,
@@ -262,7 +267,7 @@ class ChangeAccountPasswordView(ChangePasswordView):
             return self.get_response()
 
 
-user_model = settings.AUTH_USER_MODEL.lower().replace('.','/')
+user_model = settings.AUTH_USER_MODEL.lower().replace('.', '/')
 site.register_view(r'^%s/(.+)/password/$' % user_model,
                    ChangePasswordView, name='user_change_password')
 site.register_view(r'^account/password/$', ChangeAccountPasswordView,

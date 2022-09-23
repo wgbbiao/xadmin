@@ -6,14 +6,15 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, FieldError
 from django.db import models, transaction
+from django.core.exceptions import FieldDoesNotExist
 from django.forms.models import modelform_factory, modelform_defines_fields
 from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.html import escape
 from django.utils.text import capfirst, get_text_list
 from django.template import loader
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.forms.widgets import Media
 from xadmin import widgets
 from xadmin.layout import FormHelper, Layout, Fieldset, TabHolder, Container, Column, Col, Field
@@ -206,13 +207,15 @@ class ModelFormAdminView(ModelAdminView):
             elif isinstance(layout[0], (Fieldset, TabHolder)):
                 fs = (Col('full', *layout, horizontal=True, span=12),)
             else:
-                fs = (Col('full', Fieldset("", *layout, css_class="unsort no_title"), horizontal=True, span=12),)
+                fs = (Col('full', Fieldset("", *layout,
+                      css_class="unsort no_title"), horizontal=True, span=12),)
 
             layout = Layout(Container(*fs))
 
             rendered_fields = [i[1] for i in layout.get_field_names()]
             container = layout[0].fields
-            other_fieldset = Fieldset(_(u'Other Fields'), *[f for f in fields if f not in rendered_fields])
+            other_fieldset = Fieldset(
+                _(u'Other Fields'), *[f for f in fields if f not in rendered_fields])
 
             if len(other_fieldset.fields):
                 if len(container) and isinstance(container[0], Column):
@@ -255,7 +258,8 @@ class ModelFormAdminView(ModelAdminView):
         if self.org_obj is None:
             change_message.append(_('Added.'))
         elif self.form_obj.changed_data:
-            change_message.append(_('Changed %s.') % get_text_list(self.form_obj.changed_data, _('and')))
+            change_message.append(_('Changed %s.') % get_text_list(
+                self.form_obj.changed_data, _('and')))
 
         change_message = ' '.join(change_message)
         return change_message or _('No fields changed.')
@@ -315,7 +319,8 @@ class ModelFormAdminView(ModelAdminView):
             'has_change_permission': self.has_change_permission(self.org_obj),
             'has_delete_permission': self.has_delete_permission(self.org_obj),
 
-            'has_file_field': True,  # FIXME - this should check if form or formsets have a FileField,
+            # FIXME - this should check if form or formsets have a FileField,
+            'has_file_field': True,
             'has_absolute_url': hasattr(self.model, 'get_absolute_url'),
             'form_url': '',
             'content_type_id': ContentType.objects.get_for_model(self.model).id,
@@ -380,7 +385,7 @@ class CreateAdminView(ModelFormAdminView):
             for k in initial:
                 try:
                     f = self.opts.get_field(k)
-                except models.FieldDoesNotExist:
+                except FieldDoesNotExist:
                     continue
                 if isinstance(f, models.ManyToManyField):
                     initial[k] = initial[k].split(",")
@@ -391,7 +396,7 @@ class CreateAdminView(ModelFormAdminView):
     @filter_hook
     def get_context(self):
         new_context = {
-            'title': _('Add %s') % force_text(self.opts.verbose_name),
+            'title': _('Add %s') % force_str(self.opts.verbose_name),
         }
         context = super(CreateAdminView, self).get_context()
         context.update(new_context)
@@ -400,7 +405,7 @@ class CreateAdminView(ModelFormAdminView):
     @filter_hook
     def get_breadcrumb(self):
         bcs = super(ModelFormAdminView, self).get_breadcrumb()
-        item = {'title': _('Add %s') % force_text(self.opts.verbose_name)}
+        item = {'title': _('Add %s') % force_str(self.opts.verbose_name)}
         if self.has_add_permission():
             item['url'] = self.model_admin_url('add')
         bcs.append(item)
@@ -424,8 +429,8 @@ class CreateAdminView(ModelFormAdminView):
         request = self.request
 
         msg = _(
-            'The %(name)s "%(obj)s" was added successfully.') % {'name': force_text(self.opts.verbose_name),
-                                                                 'obj': "<a class='alert-link' href='%s'>%s</a>" % (self.model_admin_url('change', self.new_obj._get_pk_val()), force_text(self.new_obj))}
+            'The %(name)s "%(obj)s" was added successfully.') % {'name': force_str(self.opts.verbose_name),
+                                                                 'obj': "<a class='alert-link' href='%s'>%s</a>" % (self.model_admin_url('change', self.new_obj._get_pk_val()), force_str(self.new_obj))}
 
         if "_continue" in request.POST:
             self.message_user(
@@ -433,7 +438,8 @@ class CreateAdminView(ModelFormAdminView):
             return self.model_admin_url('change', self.new_obj._get_pk_val())
 
         if "_addanother" in request.POST:
-            self.message_user(msg + ' ' + (_("You may add another %s below.") % force_text(self.opts.verbose_name)), 'success')
+            self.message_user(msg + ' ' + (_("You may add another %s below.") %
+                              force_str(self.opts.verbose_name)), 'success')
             return request.path
         else:
             self.message_user(msg, 'success')
@@ -459,7 +465,7 @@ class UpdateAdminView(ModelFormAdminView):
 
         if self.org_obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') %
-                          {'name': force_text(self.opts.verbose_name), 'key': escape(object_id)})
+                          {'name': force_str(self.opts.verbose_name), 'key': escape(object_id)})
 
         # comm method for both get and post
         self.prepare_form()
@@ -475,7 +481,7 @@ class UpdateAdminView(ModelFormAdminView):
     @filter_hook
     def get_context(self):
         new_context = {
-            'title': _('Change %s') % force_text(self.org_obj),
+            'title': _('Change %s') % force_str(self.org_obj),
             'object_id': str(self.org_obj.pk),
         }
         context = super(UpdateAdminView, self).get_context()
@@ -486,7 +492,7 @@ class UpdateAdminView(ModelFormAdminView):
     def get_breadcrumb(self):
         bcs = super(ModelFormAdminView, self).get_breadcrumb()
 
-        item = {'title': force_text(self.org_obj)}
+        item = {'title': force_str(self.org_obj)}
         if self.has_change_permission():
             item['url'] = self.model_admin_url('change', self.org_obj.pk)
         bcs.append(item)
@@ -521,14 +527,14 @@ class UpdateAdminView(ModelFormAdminView):
         pk_value = obj._get_pk_val()
 
         msg = _('The %(name)s "%(obj)s" was changed successfully.') % {'name':
-                                                                       force_text(verbose_name), 'obj': force_text(obj)}
+                                                                       force_str(verbose_name), 'obj': force_str(obj)}
         if "_continue" in request.POST:
             self.message_user(
                 msg + ' ' + _("You may edit it again below."), 'success')
             return request.path
         elif "_addanother" in request.POST:
             self.message_user(msg + ' ' + (_("You may add another %s below.")
-                                           % force_text(verbose_name)), 'success')
+                                           % force_str(verbose_name)), 'success')
             return self.model_admin_url('add')
         else:
             self.message_user(msg, 'success')
@@ -541,7 +547,8 @@ class UpdateAdminView(ModelFormAdminView):
                 change_list_url = self.model_admin_url('changelist')
                 if 'LIST_QUERY' in self.request.session \
                         and self.request.session['LIST_QUERY'][0] == self.model_info:
-                    change_list_url += '?' + self.request.session['LIST_QUERY'][1]
+                    change_list_url += '?' + \
+                        self.request.session['LIST_QUERY'][1]
                 return change_list_url
             else:
                 return self.get_admin_url('index')

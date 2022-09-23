@@ -7,7 +7,7 @@ from django.contrib.contenttypes.forms import BaseGenericInlineFormSet, generic_
 from django.template import loader
 from django.template.loader import render_to_string
 from django.contrib.auth import get_permission_codename
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from crispy_forms.utils import TEMPLATE_PACK
 
 from xadmin.layout import FormHelper, Layout, flatatt, Container, Column, Field, Fieldset
@@ -59,6 +59,7 @@ class InlineStyleManager(object):
     def get_style(self, name='stacked'):
         return self.inline_styles.get(name)
 
+
 style_manager = InlineStyleManager()
 
 
@@ -74,21 +75,29 @@ class InlineStyle(object):
 
     def get_attrs(self):
         return {}
+
+
 style_manager.register_style('stacked', InlineStyle)
 
 
 class OneInlineStyle(InlineStyle):
     template = 'xadmin/edit_inline/one.html'
+
+
 style_manager.register_style("one", OneInlineStyle)
 
 
 class AccInlineStyle(InlineStyle):
     template = 'xadmin/edit_inline/accordion.html'
+
+
 style_manager.register_style("accordion", AccInlineStyle)
 
 
 class TabInlineStyle(InlineStyle):
     template = 'xadmin/edit_inline/tab.html'
+
+
 style_manager.register_style("tab", TabInlineStyle)
 
 
@@ -103,12 +112,16 @@ class TableInlineStyle(InlineStyle):
         fields = []
         readonly_fields = []
         if len(self.formset):
-            fields = [f for k, f in self.formset[0].fields.items() if k != DELETION_FIELD_NAME]
-            readonly_fields = [f for f in getattr(self.formset[0], 'readonly_fields', [])]
+            fields = [f for k, f in self.formset[0].fields.items()
+                      if k != DELETION_FIELD_NAME]
+            readonly_fields = [f for f in getattr(
+                self.formset[0], 'readonly_fields', [])]
         return {
             'fields': fields,
             'readonly_fields': readonly_fields
         }
+
+
 style_manager.register_style("table", TableInlineStyle)
 
 
@@ -225,21 +238,26 @@ class InlineModelAdmin(ModelFormAdminView):
                 form.readonly_fields = []
                 inst = form.save(commit=False)
                 if inst:
-                    meta_field_names = [field.name for field in inst._meta.get_fields()]
+                    meta_field_names = [
+                        field.name for field in inst._meta.get_fields()]
                     for readonly_field in readonly_fields:
                         value = None
                         label = None
                         if readonly_field in meta_field_names:
-                            label = inst._meta.get_field(readonly_field).verbose_name
-                            value = smart_text(getattr(inst, readonly_field))
+                            label = inst._meta.get_field(
+                                readonly_field).verbose_name
+                            value = smart_str(getattr(inst, readonly_field))
                         elif inspect.ismethod(getattr(inst, readonly_field, None)):
                             value = getattr(inst, readonly_field)()
-                            label = getattr(getattr(inst, readonly_field), 'short_description', readonly_field)
+                            label = getattr(
+                                getattr(inst, readonly_field), 'short_description', readonly_field)
                         elif inspect.ismethod(getattr(self, readonly_field, None)):
                             value = getattr(self, readonly_field)(inst)
-                            label = getattr(getattr(self, readonly_field), 'short_description', readonly_field)
+                            label = getattr(
+                                getattr(self, readonly_field), 'short_description', readonly_field)
                         if value:
-                            form.readonly_fields.append({'label': label, 'contents': value})
+                            form.readonly_fields.append(
+                                {'label': label, 'contents': value})
         return instance
 
     def has_auto_field(self, form):
@@ -386,7 +404,8 @@ class InlineFormsetPlugin(BaseAdminPlugin):
             inline_instances = []
             for inline_class in self.inlines:
                 inline = self.admin_view.get_view(
-                    (getattr(inline_class, 'generic_inline', False) and GenericInlineModelAdmin or InlineModelAdmin),
+                    (getattr(inline_class, 'generic_inline', False)
+                     and GenericInlineModelAdmin or InlineModelAdmin),
                     inline_class).init(self.admin_view)
                 if not (inline.has_add_permission() or
                         inline.has_change_permission() or
@@ -462,7 +481,8 @@ class InlineFormsetPlugin(BaseAdminPlugin):
             replace_field_to_value(formset.helper.layout, inline)
             model = inline.model
             opts = model._meta
-            fake_admin_class = type(str('%s%sFakeAdmin' % (opts.app_label, opts.model_name)), (object, ), {'model': model})
+            fake_admin_class = type(str('%s%sFakeAdmin' % (
+                opts.app_label, opts.model_name)), (object, ), {'model': model})
             for form in formset.forms:
                 instance = form.instance
                 if instance.pk:
@@ -484,6 +504,7 @@ class DetailInlineFormsetPlugin(InlineFormsetPlugin):
         self.formsets = [self._get_detail_formset_instance(
             inline) for inline in self.inline_instances]
         return form
+
 
 site.register_plugin(InlineFormsetPlugin, ModelFormAdminView)
 site.register_plugin(DetailInlineFormsetPlugin, DetailAdminView)

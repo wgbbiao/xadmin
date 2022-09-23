@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from django.forms.utils import ErrorDict
 from django.utils.html import escape
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ListAdminView, ModelFormAdminView, DetailAdminView
 
@@ -12,14 +12,14 @@ NON_FIELD_ERRORS = '__all__'
 class BaseAjaxPlugin(BaseAdminPlugin):
 
     def init_request(self, *args, **kwargs):
-        return bool(self.request.is_ajax() or self.request.GET.get('_ajax'))
+        return bool(self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('_ajax'))
 
 
 class AjaxListPlugin(BaseAjaxPlugin):
-    
-    def get_list_display(self,list_display):
-        list_fields = [field for field in self.request.GET.get('_fields',"").split(",") 
-                                if field.strip() != ""]
+
+    def get_list_display(self, list_display):
+        list_fields = [field for field in self.request.GET.get('_fields', "").split(",")
+                       if field.strip() != ""]
         if list_fields:
             return list_fields
         return list_display
@@ -27,7 +27,7 @@ class AjaxListPlugin(BaseAjaxPlugin):
     def get_result_list(self, response):
         av = self.admin_view
         base_fields = self.get_list_display(av.base_list_display)
-        headers = dict([(c.field_name, force_text(c.text)) for c in av.result_headers(
+        headers = dict([(c.field_name, force_str(c.text)) for c in av.result_headers(
         ).cells if c.field_name in base_fields])
 
         objects = [dict([(o.field_name, escape(str(o.value))) for i, o in
@@ -93,6 +93,7 @@ class AjaxDetailPlugin(BaseAjaxPlugin):
             results.append((result.label, result.val))
 
         return self.render_response(OrderedDict(results))
+
 
 site.register_plugin(AjaxListPlugin, ListAdminView)
 site.register_plugin(AjaxFormPlugin, ModelFormAdminView)

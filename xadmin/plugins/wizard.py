@@ -7,7 +7,7 @@ from formtools.wizard.storage import get_storage
 from formtools.wizard.forms import ManagementForm
 from formtools.wizard.views import StepsHelper
 
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from django.utils.module_loading import import_string
 from django.forms import ValidationError
 from django.forms.models import modelform_factory
@@ -48,7 +48,7 @@ class WizardFormPlugin(BaseAdminPlugin):
                 self.wizard_form_list) > 0, 'at least one form is needed'
 
             for i, form in enumerate(self.wizard_form_list):
-                init_form_list[smart_text(form[0])] = form[1]
+                init_form_list[smart_str(form[0])] = form[1]
 
             self._form_list = init_form_list
 
@@ -56,7 +56,7 @@ class WizardFormPlugin(BaseAdminPlugin):
 
     # Plugin replace methods
     def init_request(self, *args, **kwargs):
-        if self.request.is_ajax() or ("_ajax" in self.request.GET) or not hasattr(self.request, 'session') or (args and not self.wizard_for_update):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or ("_ajax" in self.request.GET) or not hasattr(self.request, 'session') or (args and not self.wizard_for_update):
             # update view
             return False
         return bool(self.wizard_form_list)

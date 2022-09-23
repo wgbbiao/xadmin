@@ -3,7 +3,7 @@ from django.forms.utils import flatatt
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django import forms
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ModelFormAdminView
@@ -30,7 +30,8 @@ class ForeignKeySearchWidget(forms.Widget):
         attrs['data-choices'] = '?'
         if self.rel.limit_choices_to:
             for i in list(self.rel.limit_choices_to):
-                attrs['data-choices'] += "&_p_%s=%s" % (i, self.rel.limit_choices_to[i])
+                attrs['data-choices'] += "&_p_%s=%s" % (
+                    i, self.rel.limit_choices_to[i])
             attrs['data-choices'] = format_html(attrs['data-choices'])
         attrs.update(kwargs)
         return super(ForeignKeySearchWidget, self).build_attrs(attrs, extra_attrs=extra_attrs)
@@ -39,7 +40,8 @@ class ForeignKeySearchWidget(forms.Widget):
         final_attrs = self.build_attrs(attrs, extra_attrs={'name': name})
         output = [format_html('<select{0}>', flatatt(final_attrs))]
         if value:
-            output.append(format_html('<option selected="selected" value="{0}">{1}</option>', value, self.label_for_value(value)))
+            output.append(format_html(
+                '<option selected="selected" value="{0}">{1}</option>', value, self.label_for_value(value)))
         output.append('</select>')
         return mark_safe('\n'.join(output))
 
@@ -60,12 +62,14 @@ class ForeignKeySearchWidget(forms.Widget):
 class ForeignKeySelectWidget(ForeignKeySearchWidget):
 
     def build_attrs(self, attrs={}, **kwargs):
-        attrs = super(ForeignKeySelectWidget, self).build_attrs(attrs, **kwargs)
+        attrs = super(ForeignKeySelectWidget,
+                      self).build_attrs(attrs, **kwargs)
         if "class" not in attrs:
             attrs['class'] = 'select-preload'
         else:
             attrs['class'] = attrs['class'] + ' select-preload'
-        attrs['data-placeholder'] = _('Select %s') % self.rel.model._meta.verbose_name
+        attrs['data-placeholder'] = _(
+            'Select %s') % self.rel.model._meta.verbose_name
         return attrs
 
 
@@ -80,5 +84,6 @@ class RelateFieldPlugin(BaseAdminPlugin):
                 return dict(attrs or {},
                             widget=(style == 'fk-ajax' and ForeignKeySearchWidget or ForeignKeySelectWidget)(db_field.remote_field, self.admin_view, using=db))
         return attrs
+
 
 site.register_plugin(RelateFieldPlugin, ModelFormAdminView)

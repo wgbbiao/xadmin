@@ -3,12 +3,12 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm
 
-from django.utils.translation import ugettext_lazy, ugettext as _
+from django.utils.translation import gettext, gettext as _
 
 from django.contrib.auth import get_user_model
 
-ERROR_MESSAGE = ugettext_lazy("Please enter the correct username and password "
-                              "for a staff account. Note that both fields are case-sensitive.")
+ERROR_MESSAGE = gettext("Please enter the correct username and password "
+                        "for a staff account. Note that both fields are case-sensitive.")
 
 
 class AdminAuthenticationForm(AuthenticationForm):
@@ -18,7 +18,7 @@ class AdminAuthenticationForm(AuthenticationForm):
     """
     this_is_the_login_form = forms.BooleanField(
         widget=forms.HiddenInput, initial=1,
-        error_messages={'required': ugettext_lazy("Please log in again, because your session has expired.")})
+        error_messages={'required': gettext("Please log in again, because your session has expired.")})
 
     def clean(self):
         username = self.cleaned_data.get('username')

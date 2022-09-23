@@ -4,13 +4,14 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core.paginator import InvalidPage, Paginator
 from django.urls.base import NoReverseMatch
 from django.db import models
+from django.core.exceptions import FieldDoesNotExist
 from django.http import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse, TemplateResponse
-from django.utils.encoding import force_text, smart_text
+from django.utils.encoding import force_str, smart_str
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from xadmin.util import lookup_field, display_for_field, label_for_field, boolean_icon
 
@@ -68,7 +69,7 @@ class ResultItem(object):
     def label(self):
         text = mark_safe(
             self.text) if self.allow_tags else conditional_escape(self.text)
-        if force_text(text) == '':
+        if force_str(text) == '':
             text = mark_safe('&nbsp;')
         for wrap in self.wraps:
             text = mark_safe(wrap % text)
@@ -121,7 +122,8 @@ class ListAdminView(ModelAdminView):
             raise PermissionDenied
 
         request = self.request
-        request.session['LIST_QUERY'] = (self.model_info, self.request.META['QUERY_STRING'])
+        request.session['LIST_QUERY'] = (
+            self.model_info, self.request.META['QUERY_STRING'])
 
         self.pk_attname = self.opts.pk.attname
         self.lookup_opts = self.opts
@@ -221,7 +223,7 @@ class ListAdminView(ModelAdminView):
                 for field_name in self.list_display:
                     try:
                         field = self.opts.get_field(field_name)
-                    except models.FieldDoesNotExist:
+                    except FieldDoesNotExist:
                         pass
                     else:
                         if isinstance(field.remote_field, models.ManyToOneRel):
@@ -258,7 +260,7 @@ class ListAdminView(ModelAdminView):
         try:
             field = self.opts.get_field(field_name)
             return field.name
-        except models.FieldDoesNotExist:
+        except FieldDoesNotExist:
             # See whether field_name is a name of a non-field
             # that allows sorting.
             if callable(field_name):
@@ -365,12 +367,12 @@ class ListAdminView(ModelAdminView):
         """
         Prepare the context for templates.
         """
-        self.title = _('%s List') % force_text(self.opts.verbose_name)
+        self.title = _('%s List') % force_str(self.opts.verbose_name)
         model_fields = [(f, f.name in self.list_display, self.get_check_field_url(f))
                         for f in (list(self.opts.fields) + self.get_model_method_fields()) if f.name not in self.list_exclude]
 
         new_context = {
-            'model_name': force_text(self.opts.verbose_name_plural),
+            'model_name': force_str(self.opts.verbose_name_plural),
             'title': self.title,
             'cl': self,
             'model_fields': model_fields,
@@ -465,7 +467,7 @@ class ListAdminView(ModelAdminView):
         o_list_desc = []  # URL for making this field the primary sort
         o_list_remove = []  # URL for removing this field from sort
         o_list_toggle = []  # URL for toggling order type for this field
-        make_qs_param = lambda t, n: ('-' if t == 'desc' else '') + str(n)
+        def make_qs_param(t, n): return ('-' if t == 'desc' else '') + str(n)
 
         for j, ot in ordering_field_columns.items():
             if j == field_name:  # Same column
@@ -531,7 +533,8 @@ class ListAdminView(ModelAdminView):
         try:
             f, attr, value = lookup_field(field_name, obj, self)
         except (AttributeError, ObjectDoesNotExist, NoReverseMatch):
-            item.text = mark_safe("<span class='text-muted'>%s</span>" % EMPTY_CHANGELIST_VALUE)
+            item.text = mark_safe(
+                "<span class='text-muted'>%s</span>" % EMPTY_CHANGELIST_VALUE)
         else:
             if f is None:
                 item.allow_tags = getattr(attr, 'allow_tags', False)
@@ -540,12 +543,13 @@ class ListAdminView(ModelAdminView):
                     item.allow_tags = True
                     item.text = boolean_icon(value)
                 else:
-                    item.text = smart_text(value)
+                    item.text = smart_str(value)
             else:
                 if isinstance(f.remote_field, models.ManyToOneRel):
                     field_val = getattr(obj, f.name)
                     if field_val is None:
-                        item.text = mark_safe("<span class='text-muted'>%s</span>" % EMPTY_CHANGELIST_VALUE)
+                        item.text = mark_safe(
+                            "<span class='text-muted'>%s</span>" % EMPTY_CHANGELIST_VALUE)
                     else:
                         item.text = field_val
                 else:
@@ -565,10 +569,12 @@ class ListAdminView(ModelAdminView):
             item.row['is_display_first'] = False
             item.is_display_link = True
             if self.list_display_links_details:
-                item_res_uri = self.model_admin_url("detail", getattr(obj, self.pk_attname))
+                item_res_uri = self.model_admin_url(
+                    "detail", getattr(obj, self.pk_attname))
                 if item_res_uri:
                     if self.has_change_permission(obj):
-                        edit_url = self.model_admin_url("change", getattr(obj, self.pk_attname))
+                        edit_url = self.model_admin_url(
+                            "change", getattr(obj, self.pk_attname))
                     else:
                         edit_url = ""
                     item.wraps.append('<a data-res-uri="%s" data-edit-uri="%s" class="details-handler" rel="tooltip" title="%s">%%s</a>'
@@ -602,7 +608,8 @@ class ListAdminView(ModelAdminView):
     # Media
     @filter_hook
     def get_media(self):
-        media = super(ListAdminView, self).get_media() + self.vendor('xadmin.page.list.js', 'xadmin.page.form.js')
+        media = super(ListAdminView, self).get_media() + \
+            self.vendor('xadmin.page.list.js', 'xadmin.page.form.js')
         if self.list_display_links_details:
             media += self.vendor('xadmin.plugin.details.js', 'xadmin.form.css')
         return media

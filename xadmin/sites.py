@@ -6,6 +6,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models.base import ModelBase
 from django.views.decorators.cache import never_cache
 from django.template.engine import Engine
+from django.apps import apps
 import inspect
 
 
@@ -108,14 +109,16 @@ class AdminSite(object):
                     # which causes issues later on.
                     options['__module__'] = __name__
 
-                admin_class = type(str("%s%sAdmin" % (model._meta.app_label, model._meta.model_name)), (admin_class,), options or {})
+                admin_class = type(str("%s%sAdmin" % (
+                    model._meta.app_label, model._meta.model_name)), (admin_class,), options or {})
                 admin_class.model = model
                 admin_class.order = self.model_admins_order
                 self.model_admins_order += 1
                 self._registry[model] = admin_class
             else:
                 if model in self._registry_avs:
-                    raise AlreadyRegistered('The admin_view_class %s is already registered' % model.__name__)
+                    raise AlreadyRegistered(
+                        'The admin_view_class %s is already registered' % model.__name__)
                 if options:
                     options['__module__'] = __name__
                     admin_class = type(str(
@@ -141,7 +144,8 @@ class AdminSite(object):
                 del self._registry[model]
             else:
                 if model not in self._registry_avs:
-                    raise NotRegistered('The admin_view_class %s is not registered' % model.__name__)
+                    raise NotRegistered(
+                        'The admin_view_class %s is not registered' % model.__name__)
                 del self._registry_avs[model]
 
     def set_loginview(self, login_view):
@@ -161,9 +165,8 @@ class AdminSite(object):
         The default implementation checks that LogEntry, ContentType and the
         auth context processor are installed.
         """
-        from django.contrib.contenttypes.models import ContentType
 
-        if not ContentType._meta.installed:
+        if not apps.is_installed('django.contrib.contenttypes'):
             raise ImproperlyConfigured("Put 'django.contrib.contenttypes' in "
                                        "your INSTALLED_APPS setting in order to use the admin application.")
 
@@ -227,12 +230,14 @@ class AdminSite(object):
                 bases = [plugin_class]
                 for oc in option_classes:
                     attrs.update(self._get_merge_attrs(oc, plugin_class))
-                    meta_class = getattr(oc, plugin_class.__name__, getattr(oc, plugin_class.__name__.replace('Plugin', ''), None))
+                    meta_class = getattr(oc, plugin_class.__name__, getattr(
+                        oc, plugin_class.__name__.replace('Plugin', ''), None))
                     if meta_class:
                         bases.insert(0, meta_class)
                 if attrs:
                     plugin_class = MergeAdminMetaclass(
-                        '%s%s' % (''.join([oc.__name__ for oc in option_classes]), plugin_class.__name__),
+                        '%s%s' % (
+                            ''.join([oc.__name__ for oc in option_classes]), plugin_class.__name__),
                         tuple(bases), attrs)
             return plugin_class
         return merge_class
@@ -297,7 +302,8 @@ class AdminSite(object):
 
         # Admin-site-wide views.
         urlpatterns = [
-            path('jsi18n/', wrap(self.i18n_javascript, cacheable=True), name='jsi18n')
+            path('jsi18n/', wrap(self.i18n_javascript,
+                 cacheable=True), name='jsi18n')
         ]
 
         # Registed admin views
@@ -325,7 +331,8 @@ class AdminSite(object):
                 for _path, clz, name in self._registry_modelviews
             ]
             urlpatterns += [
-                re_path(r'^%s/%s/' % (model._meta.app_label, model._meta.model_name), include(view_urls))
+                re_path(r'^%s/%s/' % (model._meta.app_label,
+                        model._meta.model_name), include(view_urls))
             ]
         return urlpatterns
 
@@ -342,6 +349,7 @@ class AdminSite(object):
         generated JavaScript will be leaner and faster.
         """
         return JavaScriptCatalog.as_view(packages=['django.contrib.admin'])(request)
+
 
 # This global object represents the default admin site, for the common case.
 # You can instantiate AdminSite in your own code to create a custom admin site.

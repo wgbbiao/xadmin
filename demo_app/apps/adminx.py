@@ -13,9 +13,10 @@ class MainDashboard(object):
         [
             {"type": "html", "title": "Test Widget",
              "content": "<h3> Welcome to Xadmin! </h3><p>Join Online Group: <br/>QQ Qun : 282936295</p>"},
-            {"type": "chart", "model": "app.accessrecord", "chart": "user_count",
+            {"type": "chart", "model": "apps.accessrecord", "chart": "user_count",
              "params": {"_p_date__gte": "2013-01-08", "p": 1, "_p_date__lt": "2013-01-29"}},
-            {"type": "list", "model": "app.host", "params": {"o": "-guarantee_date"}},
+            {"type": "list", "model": "apps.host",
+                "params": {"o": "-guarantee_date"}},
         ],
         [
             {"type": "qbutton", "title": "Quick Start",
@@ -48,7 +49,8 @@ class MaintainInline(object):
 
 @xadmin.sites.register(IDC)
 class IDCAdmin(object):
-    list_display = ("name", "description", "create_time", "contact", "telphone", "address", "customer_id")
+    list_display = ("name", "description", "create_time",
+                    "contact", "telphone", "address", "customer_id")
     list_display_links = ("name",)
     wizard_form_list = [
         ("First's Form", ("name", "description")),

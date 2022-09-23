@@ -8,11 +8,11 @@ try:
     from django.forms.widgets import ChoiceWidget as RadioChoiceInput
 except:
     from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from django.utils.safestring import mark_safe
 from django.utils.html import conditional_escape
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .util import vendor
 
@@ -105,7 +105,7 @@ class AdminRadioInput(RadioChoiceInput):
             label_for = ' for="%s_%s"' % (self.attrs['id'], self.index)
         else:
             label_for = ''
-        choice_label = conditional_escape(force_text(self.choice_label))
+        choice_label = conditional_escape(force_str(self.choice_label))
         if attrs.get('inline', False):
             return mark_safe(u'<label%s class="radio-inline">%s %s</label>' %
                              (label_for, self.tag(), choice_label))
@@ -126,7 +126,7 @@ class AdminRadioFieldRenderer(forms.RadioSelect):
                                choice, idx)
 
     def render(self):
-        return mark_safe(u'\n'.join([force_text(w) for w in self]))
+        return mark_safe(u'\n'.join([force_str(w) for w in self]))
 
 
 class AdminRadioSelect(forms.RadioSelect):
@@ -141,7 +141,7 @@ class AdminCheckboxSelect(forms.CheckboxSelectMultiple):
         final_attrs = self.build_attrs(attrs, extra_attrs={'name': name})
         output = []
         # Normalize to strings
-        str_values = set([force_text(v) for v in value])
+        str_values = set([force_str(v) for v in value])
         for i, (option_value, option_label) in enumerate(
                 chain(self.choices, choices)):
             # If an ID attribute was given, add a numeric index as a suffix,
@@ -154,9 +154,9 @@ class AdminCheckboxSelect(forms.CheckboxSelectMultiple):
 
             cb = forms.CheckboxInput(
                 final_attrs, check_test=lambda value: value in str_values)
-            option_value = force_text(option_value)
+            option_value = force_str(option_value)
             rendered_cb = cb.render(name, option_value)
-            option_label = conditional_escape(force_text(option_label))
+            option_label = conditional_escape(force_str(option_label))
 
             if final_attrs.get('inline', False):
                 output.append(u'<label%s class="checkbox-inline">%s %s</label>'

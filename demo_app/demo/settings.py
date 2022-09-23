@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext as _
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,11 +24,6 @@ SECRET_KEY = 'l!fafmjcqyn+j+zz1@2@wt$o8w8k(_dhgub%41l#k3zi2m-b%m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-LANGUAGES = (
-    ('en', _('English')),
-    ('zh-hans', _('Chinese')),
-)
-
 ALLOWED_HOSTS = []
 
 
@@ -46,8 +41,13 @@ INSTALLED_APPS = [
     'crispy_forms',
     'reversion',
 
-    'app',
+    'apps',
 ]
+
+LANGUAGES = (
+    ('en', 'English'),
+    ('zh-hans', 'Chinese'),
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -45,7 +45,7 @@ from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ListAdminView, ModelAdminView
 from xadmin.views.base import csrf_protect_m, filter_hook
 from django.db import transaction
-from import_export.admin import DEFAULT_FORMATS, SKIP_ADMIN_LOG, TMP_STORAGE_CLASS
+from import_export.admin import DEFAULT_FORMATS, TempFolderStorage
 from import_export.resources import modelresource_factory
 from import_export.forms import (
     ImportForm,
@@ -54,11 +54,9 @@ from import_export.forms import (
 )
 from import_export.results import RowResult
 from import_export.signals import post_export, post_import
-try:
-    from django.utils.encoding import force_text
-except ImportError:
-    from django.utils.encoding import force_unicode as force_text
-from django.utils.translation import ugettext_lazy as _
+
+from django.utils.encoding import force_str
+from django.utils.translation import gettext as _
 from django.template.response import TemplateResponse
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
@@ -66,6 +64,11 @@ from django.contrib import messages
 from django.urls.base import reverse
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
+from django.conf import settings
+
+SKIP_ADMIN_LOG = getattr(settings, 'IMPORT_EXPORT_SKIP_ADMIN_LOG', False)
+TMP_STORAGE_CLASS = getattr(settings, 'IMPORT_EXPORT_TMP_STORAGE_CLASS',
+                            TempFolderStorage)
 
 
 class ImportMenuPlugin(BaseAdminPlugin):
@@ -79,7 +82,8 @@ class ImportMenuPlugin(BaseAdminPlugin):
         has_add_perm = self.has_model_perm(self.model, 'add')
         if has_change_perm and has_add_perm:
             model_info = (self.opts.app_label, self.opts.model_name)
-            import_url = reverse('xadmin:%s_%s_import' % model_info, current_app=self.admin_site.name)
+            import_url = reverse('xadmin:%s_%s_import' %
+                                 model_info, current_app=self.admin_site.name)
             context = get_context_dict(context or {})  # no error!
             context.update({
                 'import_url': import_url,
@@ -164,7 +168,8 @@ class ImportView(ImportBaseView):
         if not (self.has_change_permission() and self.has_add_permission()):
             raise PermissionDenied
 
-        resource = self.get_import_resource_class()(**self.get_import_resource_kwargs(request, *args, **kwargs))
+        resource = self.get_import_resource_class()(
+            **self.get_import_resource_kwargs(request, *args, **kwargs))
 
         context = super(ImportView, self).get_context()
 
@@ -176,7 +181,8 @@ class ImportView(ImportBaseView):
         context['title'] = _("Import") + ' ' + self.opts.verbose_name
         context['form'] = form
         context['opts'] = self.model._meta
-        context['fields'] = [f.column_name for f in resource.get_user_visible_fields()]
+        context['fields'] = [
+            f.column_name for f in resource.get_user_visible_fields()]
 
         request.current_app = self.admin_site.name
         return TemplateResponse(request, [self.import_template_name],
@@ -195,7 +201,8 @@ class ImportView(ImportBaseView):
         if not (self.has_change_permission() and self.has_add_permission()):
             raise PermissionDenied
 
-        resource = self.get_import_resource_class()(**self.get_import_resource_kwargs(request, *args, **kwargs))
+        resource = self.get_import_resource_class()(
+            **self.get_import_resource_kwargs(request, *args, **kwargs))
 
         context = super(ImportView, self).get_context()
 
@@ -223,7 +230,7 @@ class ImportView(ImportBaseView):
             try:
                 data = tmp_storage.read(input_format.get_read_mode())
                 if not input_format.is_binary() and self.from_encoding:
-                    data = force_text(data, self.from_encoding)
+                    data = force_str(data, self.from_encoding)
                 dataset = input_format.create_dataset(data)
             except UnicodeDecodeError as e:
                 return HttpResponse(_(u"<h1>Imported file has a wrong encoding: %s</h1>" % e))
@@ -247,7 +254,8 @@ class ImportView(ImportBaseView):
         context['title'] = _("Import") + ' ' + self.opts.verbose_name
         context['form'] = form
         context['opts'] = self.model._meta
-        context['fields'] = [f.column_name for f in resource.get_user_visible_fields()]
+        context['fields'] = [
+            f.column_name for f in resource.get_user_visible_fields()]
 
         request.current_app = self.admin_site.name
         return TemplateResponse(request, [self.import_template_name],
@@ -264,7 +272,8 @@ class ImportProcessView(ImportBaseView):
         Perform the actual import action (after the user has confirmed he
         wishes to import)
         """
-        resource = self.get_import_resource_class()(**self.get_import_resource_kwargs(request, *args, **kwargs))
+        resource = self.get_import_resource_class()(
+            **self.get_import_resource_kwargs(request, *args, **kwargs))
 
         confirm_form = ConfirmImportForm(request.POST)
         if confirm_form.is_valid():
@@ -272,10 +281,11 @@ class ImportProcessView(ImportBaseView):
             input_format = import_formats[
                 int(confirm_form.cleaned_data['input_format'])
             ]()
-            tmp_storage = self.get_tmp_storage_class()(name=confirm_form.cleaned_data['import_file_name'])
+            tmp_storage = self.get_tmp_storage_class()(
+                name=confirm_form.cleaned_data['import_file_name'])
             data = tmp_storage.read(input_format.get_read_mode())
             if not input_format.is_binary() and self.from_encoding:
-                data = force_text(data, self.from_encoding)
+                data = force_str(data, self.from_encoding)
             dataset = input_format.create_dataset(data)
 
             result = resource.import_data(dataset, dry_run=False,
@@ -290,7 +300,8 @@ class ImportProcessView(ImportBaseView):
                     RowResult.IMPORT_TYPE_UPDATE: CHANGE,
                     RowResult.IMPORT_TYPE_DELETE: DELETION,
                 }
-                content_type_id = ContentType.objects.get_for_model(self.model).pk
+                content_type_id = ContentType.objects.get_for_model(
+                    self.model).pk
                 for row in result:
                     if row.import_type != row.IMPORT_TYPE_ERROR and row.import_type != row.IMPORT_TYPE_SKIP:
                         LogEntry.objects.log_action(
@@ -394,7 +405,8 @@ class ExportMixin(object):
         """
         request = kwargs.pop("request")
         resource_class = self.get_export_resource_class()
-        data = resource_class(**self.get_export_resource_kwargs(request)).export(queryset, *args, **kwargs)
+        data = resource_class(
+            **self.get_export_resource_kwargs(request)).export(queryset, *args, **kwargs)
         export_data = file_format.export_data(data)
         return export_data
 
@@ -436,12 +448,14 @@ class ExportPlugin(ExportMixin, BaseAdminPlugin):
         export_format = self.request.GET.get('file_format')
 
         if not export_format:
-            messages.warning(self.request, _('You must select an export format.'))
+            messages.warning(self.request, _(
+                'You must select an export format.'))
         else:
             formats = self.get_export_formats()
             file_format = formats[int(export_format)]()
             queryset = self.get_export_queryset(self.request, context)
-            export_data = self.get_export_data(file_format, queryset, request=self.request)
+            export_data = self.get_export_data(
+                file_format, queryset, request=self.request)
             content_type = file_format.get_content_type()
             # Django 1.7 uses the content_type kwarg instead of mimetype
             try:
@@ -456,7 +470,8 @@ class ExportPlugin(ExportMixin, BaseAdminPlugin):
 
 
 site.register_modelview(r'^import/$', ImportView, name='%s_%s_import')
-site.register_modelview(r'^process_import/$', ImportProcessView, name='%s_%s_process_import')
+site.register_modelview(r'^process_import/$',
+                        ImportProcessView, name='%s_%s_process_import')
 site.register_plugin(ImportMenuPlugin, ListAdminView)
 site.register_plugin(ExportMenuPlugin, ListAdminView)
 site.register_plugin(ExportPlugin, ListAdminView)

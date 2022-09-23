@@ -8,8 +8,8 @@ from django.db import models
 from django.http import HttpResponse, HttpResponseNotFound
 from django.template import loader
 from django.utils.http import urlencode
-from django.utils.encoding import force_text, smart_text
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.encoding import force_str, smart_str
+from django.utils.translation import gettext as _, gettext
 
 from xadmin.plugins.utils import get_context_dict
 from xadmin.sites import site
@@ -46,7 +46,7 @@ class ChartWidget(ModelBaseWidget):
             else:
                 self.charts = model_admin.data_charts
                 if self.title is None:
-                    self.title = ugettext(
+                    self.title = gettext(
                         "%s Charts") % self.model._meta.verbose_name_plural
 
     def filte_choices_model(self, model, modeladmin):
@@ -76,7 +76,7 @@ class JSONEncoder(DjangoJSONEncoder):
             try:
                 return super(JSONEncoder, self).default(o)
             except Exception:
-                return smart_text(o)
+                return smart_str(o)
 
 
 class ChartsPlugin(BaseAdminPlugin):
@@ -123,7 +123,7 @@ class ChartsView(ListAdminView):
         self.y_fields = (
             y_fields,) if type(y_fields) not in (list, tuple) else y_fields
 
-        datas = [{"data":[], "label": force_text(label_for_field(
+        datas = [{"data": [], "label": force_str(label_for_field(
             i, self.model, model_admin=self))} for i in self.y_fields]
 
         self.make_result_list()
@@ -155,6 +155,7 @@ class ChartsView(ListAdminView):
         result = json.dumps(content, cls=JSONEncoder, ensure_ascii=False)
 
         return HttpResponse(result)
+
 
 site.register_plugin(ChartsPlugin, ListAdminView)
 site.register_modelview(r'^chart/(.+)/$', ChartsView, name='%s_%s_chart')

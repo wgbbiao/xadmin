@@ -1,5 +1,6 @@
-from django.db.models import FieldDoesNotExist, Avg, Max, Min, Count, Sum
-from django.utils.translation import ugettext as _
+from django.db.models import Avg, Max, Min, Count, Sum
+from django.core.exceptions import FieldDoesNotExist
+from django.utils.translation import gettext as _
 from django.forms import Media
 
 from xadmin.sites import site
@@ -37,7 +38,8 @@ class AggregationPlugin(BaseAdminPlugin):
                     item.text = ""
                 else:
                     item.text = display_for_field(obj[key], f)
-                    item.wraps.append('%%s<span class="aggregate_title label label-info">%s</span>' % AGGREGATE_TITLE[agg_method])
+                    item.wraps.append(
+                        '%%s<span class="aggregate_title label label-info">%s</span>' % AGGREGATE_TITLE[agg_method])
                     item.classes.append(agg_method)
             except FieldDoesNotExist:
                 item.text = ""
@@ -51,7 +53,8 @@ class AggregationPlugin(BaseAdminPlugin):
 
         row = ResultRow()
         row['is_display_first'] = False
-        row.cells = [self._get_field_aggregate(field_name, obj, row) for field_name in self.admin_view.list_display]
+        row.cells = [self._get_field_aggregate(
+            field_name, obj, row) for field_name in self.admin_view.list_display]
         row.css_class = 'info aggregate'
         return row
 

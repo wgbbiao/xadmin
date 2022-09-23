@@ -1,6 +1,6 @@
 
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.urls.base import reverse, NoReverseMatch
 from django.db import models
 
@@ -25,14 +25,20 @@ class DetailsPlugin(BaseAdminPlugin):
                 if rel_obj.__class__ in site._registry:
                     try:
                         model_admin = site._registry[rel_obj.__class__]
-                        has_view_perm = model_admin(self.admin_view.request).has_view_permission(rel_obj)
-                        has_change_perm = model_admin(self.admin_view.request).has_change_permission(rel_obj)
+                        has_view_perm = model_admin(
+                            self.admin_view.request).has_view_permission(rel_obj)
+                        has_change_perm = model_admin(
+                            self.admin_view.request).has_change_permission(rel_obj)
                     except:
-                        has_view_perm = self.admin_view.has_model_perm(rel_obj.__class__, 'view')
-                        has_change_perm = self.has_model_perm(rel_obj.__class__, 'change')
+                        has_view_perm = self.admin_view.has_model_perm(
+                            rel_obj.__class__, 'view')
+                        has_change_perm = self.has_model_perm(
+                            rel_obj.__class__, 'change')
                 else:
-                    has_view_perm = self.admin_view.has_model_perm(rel_obj.__class__, 'view')
-                    has_change_perm = self.has_model_perm(rel_obj.__class__, 'change')
+                    has_view_perm = self.admin_view.has_model_perm(
+                        rel_obj.__class__, 'view')
+                    has_change_perm = self.has_model_perm(
+                        rel_obj.__class__, 'change')
 
             if rel_obj and has_view_perm:
                 opts = rel_obj._meta
@@ -44,7 +50,8 @@ class DetailsPlugin(BaseAdminPlugin):
                     if item_res_uri:
                         if has_change_perm:
                             edit_url = reverse(
-                                '%s:%s_%s_change' % (self.admin_site.app_name, opts.app_label, opts.model_name),
+                                '%s:%s_%s_change' % (
+                                    self.admin_site.app_name, opts.app_label, opts.model_name),
                                 args=(getattr(rel_obj, opts.pk.attname),))
                         else:
                             edit_url = ''
@@ -57,7 +64,9 @@ class DetailsPlugin(BaseAdminPlugin):
     # Media
     def get_media(self, media):
         if self.show_all_rel_details or self.show_detail_fields:
-            media = media + self.vendor('xadmin.plugin.details.js', 'xadmin.form.css')
+            media = media + \
+                self.vendor('xadmin.plugin.details.js', 'xadmin.form.css')
         return media
+
 
 site.register_plugin(DetailsPlugin, ListAdminView)
