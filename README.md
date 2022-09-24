@@ -51,7 +51,7 @@ pip install git+git://github.com/wgbbiao/xadmin.git
 
 ## Install Requires
 
-- [django](http://djangoproject.com) \>=2
+- [django](http://djangoproject.com) \>=3
 - [django-crispy-forms](http://django-crispy-forms.rtfd.org) \>=1.8.1
   (For xadmin crispy forms)
 - [django-reversion](https://github.com/etianen/django-reversion)>=3.0.4
@@ -71,6 +71,10 @@ pip install git+git://github.com/wgbbiao/xadmin.git
 - [Chinese](https://xadmin.readthedocs.org/en/latest/index.html)
 
 ## Changelogs
+
+### 2.0.4
+
+- Compact with Django4.0, Django3.0.
 
 ### 2.0.1
 
