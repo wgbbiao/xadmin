@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'setuptools', 'Django>=3', 'django-crispy-forms>=1.8.1',
         'django-reversion>=3.0.4', 'django-formtools>=2.1',
-        'django-import-export>=1.2', 'httplib2==0.9.2', 'future'
+        'django-import-export>=1.2', 'httplib2==0.19.0', 'future'
     ],
     extras_require={
         'Excel': ['xlwt', 'xlsxwriter'],
